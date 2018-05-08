@@ -1,0 +1,40 @@
+---
+  - name: Install tools for remote access
+    apt: name={{ item }} state=present
+    with_items:
+      - openssh-server
+
+  - group:
+      name: ssh_login
+      state: present
+
+  - name: Adding existing user to group ssh_login
+    user: name=user
+          groups=ssh_login
+          append=yes
+
+
+  - name: Make sure that the .ssh directory exsists
+    file:
+      path: "/home/user/.ssh"
+      state: directory
+      mode: 0755
+
+  - name: copy authorized_keys file
+    copy:
+      src: files/authorized_keys
+      dest: "/home/user/.ssh/authorized_keys"
+      owner: user
+      group: user
+      mode: 0644
+
+  - name: Secured ssh configuration (will change port to 54646)
+    copy:
+      src: "files/sshd_config"
+      dest: /etc/ssh/sshd_config
+      owner: root
+      group: root
+      mode: 0644
+      backup: yes
+    notify:
+      - restart ssh
