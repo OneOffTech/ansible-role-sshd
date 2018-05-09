@@ -20,15 +20,15 @@
       state: directory
       mode: 0755
 
-  - name: copy authorized_keys file
-    copy:
-      src: files/authorized_keys
+  - name: Download authorized_keys file
+    get_url:
+      url: "{{ ssh_authorized_keys }}"
       dest: "/home/user/.ssh/authorized_keys"
       owner: user
       group: user
       mode: 0644
 
-  - name: Secured ssh configuration (will change port to 54646)
+  - name: Secured ssh configuration (disallows password login)
     copy:
       src: "files/sshd_config"
       dest: /etc/ssh/sshd_config
@@ -36,5 +36,11 @@
       group: root
       mode: 0644
       backup: yes
+
+  - name: Setup alternate SSH port (if specified)
+    lineinfile:
+      dest: "/etc/ssh/sshd_config"
+      regexp: "^Port"
+      line: "Port {{ secure_ssh_port }}"
     notify:
       - restart ssh
