@@ -1,2 +1,3 @@
 ---
 secure_ssh_port: 22
+secure_ssh_group: ssh_login

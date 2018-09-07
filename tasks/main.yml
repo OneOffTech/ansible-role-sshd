@@ -4,43 +4,27 @@
     with_items:
       - openssh-server
 
-  - group:
-      name: ssh_login
+  - name: Check if ssh_login group exists
+    group:
+      name: "{{ secure_ssh_group }}"
       state: present
+    register: logingroup
+    check_mode: yes # do not create group
 
-  - name: Adding existing user to group ssh_login
-    user: name=user
-          groups=ssh_login
-          append=yes
+# At this point, at least one user must be present which is member
+# of ssh_login, otherwise we will lock ourselves out of the system!
+# If the group was just created, that means this is probably not the case.
+  - fail:
+      msg: "{{ secure_ssh_group }} must exist, you will lock yourself out of the system!"
+    when: logingroup.changed
 
-
-  - name: Make sure that the .ssh directory exsists
-    file:
-      path: "/home/user/.ssh"
-      state: directory
-      mode: 0755
-
-  - name: Download authorized_keys file
-    get_url:
-      url: "{{ ssh_authorized_keys }}"
-      dest: "/home/user/.ssh/authorized_keys"
-      owner: user
-      group: user
-      mode: 0644
-
-  - name: Secured ssh configuration (disallows password login)
-    copy:
-      src: "files/sshd_config"
-      dest: /etc/ssh/sshd_config
+  - name: Secured ssh configuration (disallows password login!)
+    template:
+      src: "sshd_config.j2"
+      dest: "/etc/ssh/sshd_config"
       owner: root
       group: root
       mode: 0644
       backup: yes
-
-  - name: Setup alternate SSH port (if specified)
-    lineinfile:
-      dest: "/etc/ssh/sshd_config"
-      regexp: "^Port"
-      line: "Port {{ secure_ssh_port }}"
     notify:
       - restart ssh
