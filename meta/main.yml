@@ -1,7 +1,6 @@
 galaxy_info:
   author: Felix Delattre
   description: This roles sets up a ssh server with its configuration on a Debian (based) system
-  company:
 
   # If the issue tracker for your role is not on github, uncomment the
   # next line and provide a value
